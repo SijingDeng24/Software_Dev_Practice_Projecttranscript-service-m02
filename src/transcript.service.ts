@@ -33,7 +33,8 @@ export class TranscriptDB implements TranscriptService {
    * @returns {StudentID} - the newly-assigned ID for the new student
    */
   addStudent(newName: string): StudentID {
-    const newID = this._lastID++;
+    const newID = this._lastID;
+    this._lastID += 1;
     const newStudent: Student = { studentID: newID, studentName: newName };
     this._transcripts.push({ student: newStudent, grades: [] });
     return newID;

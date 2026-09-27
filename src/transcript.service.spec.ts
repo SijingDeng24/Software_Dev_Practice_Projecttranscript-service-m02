@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { TranscriptDB, type TranscriptService } from './transcript.service.ts';
+import type { CourseGrade } from './types.ts';
 
 let db: TranscriptService;
 beforeEach(() => {
@@ -41,5 +42,42 @@ describe('getTranscript', () => {
     // Note: the expression you expect to throw
     // must be wrapped in a (() => ...)
     expect(() => db.getTranscript(1)).toThrowError();
+  });
+});
+
+describe('addGrade', () => {
+  it('the user can add a new grade for an existing student', () => {
+    const id1 = db.addStudent('sue');
+    const courseGrade: CourseGrade = { course: 'CS453', grade: 90 };
+    db.addGrade(id1, courseGrade.course, courseGrade);
+    expect(db.getGrade(id1, 'CS453')).toEqual(courseGrade);
+  });
+  it('getGrade result should match the grade that was added for the student', () => {
+    const id1 = db.addStudent('Bob');
+    const courseGrade: CourseGrade = { course: 'CS453', grade: 90 };
+    db.addGrade(id1, courseGrade.course, courseGrade);
+    expect(db.getGrade(id1, 'CS453').grade).toEqual(90);
+  });
+  it('should allow adding different grades for different course of the same student', () => {
+    const id1 = db.addStudent('Bob');
+    const courseGrade1: CourseGrade = { course: 'CS453', grade: 90 };
+    const courseGrade2: CourseGrade = { course: 'CS440', grade: 98 };
+    db.addGrade(id1, courseGrade1.course, courseGrade1);
+    db.addGrade(id1, courseGrade2.course, courseGrade2);
+    expect(db.getGrade(id1, 'CS453')).toEqual(courseGrade1);
+    expect(db.getGrade(id1, 'CS440')).toEqual(courseGrade2);
+  });
+  it('the user cannot add a new grade for a non-existing student', () => {
+    const courseGrade: CourseGrade = { course: 'CS4530', grade: 90 };
+    const invalidId = 9999;
+    expect(() => db.addGrade(invalidId, courseGrade.course, courseGrade)).toThrowError();
+  });
+  it('the user should be able to overwrite/change the grade for a course of the student', () => {
+    const id1 = db.addStudent('Bob');
+    const courseGrade1: CourseGrade = { course: 'CS453', grade: 90 };
+    const updateGrade: CourseGrade = { course: 'CS453', grade: 93 };
+    db.addGrade(id1, courseGrade1.course, courseGrade1);
+    db.addGrade(id1, updateGrade.course, updateGrade);
+    expect(db.getGrade(id1, 'CS453').grade).toEqual(93);
   });
 });
